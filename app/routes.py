@@ -1,5 +1,6 @@
 from app import app, db
 from flask import render_template, redirect, url_for, flash
+from flask_login import login_user, logout_user
 # Import the SignUpForm and LoginForm classes from forms
 from app.forms import SignUpForm, LoginForm
 # Import the User model from models
@@ -42,9 +43,31 @@ def signup():
     return render_template('signup.html', form=form)
 
 
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     # Create an instance of the LoginForm
     form = LoginForm()
-    
+    if form.validate_on_submit():
+        # Get the data from the form
+        username = form.username.data
+        password = form.password.data
+        remember_me = form.remember_me.data
+        # Query the User table for a user with that username
+        user = db.session.execute(db.select(User).where(User.username==username)).scalar()
+        # Check if there is a user AND the password is correct for that user
+        if user is not None and user.check_password(password):
+            login_user(user, remember=remember_me)
+            # log the user in via Flask-Login
+            flash(f'{user.username} has successfully logged in.')
+            return redirect(url_for('index'))
+        else:
+            flash('Incorrect username and/or password')
+            return redirect(url_for('login'))
     return render_template('login.html', form=form)
+
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    flash('You have successfully logged out')
+    return redirect(url_for('index'))
