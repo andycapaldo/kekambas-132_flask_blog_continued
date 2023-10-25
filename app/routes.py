@@ -1,5 +1,5 @@
 from app import app, db
-from flask import render_template, redirect, url_for
+from flask import render_template, redirect, url_for, flash
 # Import the SignUpForm class from forms
 from app.forms import SignUpForm
 # Import the User model from models
@@ -35,6 +35,8 @@ def signup():
         # Add the new user object to the database
         db.session.add(new_user)
         db.session.commit()
+
+        flash(f"{new_user.username} has been created!")
 
         # Redirect back to the home page
         return redirect(url_for('index'))
